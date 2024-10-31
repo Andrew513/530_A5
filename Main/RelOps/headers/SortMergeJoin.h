@@ -13,7 +13,7 @@
 class SortMergeJoin {
 
 public:
-	// This creates a sort merge join of the tables maanged by leftInput and rightInput.
+	// This creates a sort merge join of the tables managed by leftInput and rightInput.
 	//
 	// The string finalSelectionPredicate encodes the predicate over record from
 	// the table managed by the variable output; only records for which this predicate
@@ -34,13 +34,23 @@ public:
 	// performed to create the output records from the join.
 	//
 	SortMergeJoin (MyDB_TableReaderWriterPtr leftInput, MyDB_TableReaderWriterPtr rightInput,
-		MyDB_TableReaderWriterPtr output, string finalSelectionPredicate, 
-		vector <string> projections,
-		pair <string, string> equalityCheck, string leftSelectionPredicate,
-		string rightSelectionPredicate);
+		MyDB_TableReaderWriterPtr outputIn, string finalSelectionPredicateIn, 
+		vector <string> projectionsIn,
+		pair <string, string> equalityCheckIn, string leftSelectionPredicateIn,
+		string rightSelectionPredicateIn);
 	
 	// execute the join
 	void run ();
+
+private:
+	MyDB_TableReaderWriterPtr leftTable;
+	MyDB_TableReaderWriterPtr rightTable;
+	MyDB_TableReaderWriterPtr output;
+	string finalSelectionPredicate;
+	string leftSelectionPredicate;
+	string rightSelectionPredicate;
+	vector<string> projections;
+	pair <string, string> equalityCheck;
 };
 
 #endif
