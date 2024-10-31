@@ -25,7 +25,10 @@ public:
 	
 	// execute the selection operation
 	void run ();
-
+	MyDB_TableReaderWriterPtr input;
+	MyDB_TableReaderWriterPtr output;
+	string selectionPredicate;
+	vector <string> projections;
 };
 
 #endif
