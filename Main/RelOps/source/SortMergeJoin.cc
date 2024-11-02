@@ -59,10 +59,12 @@ void SortMergeJoin :: run () {
             continue;
         } else if (leftEquality()->hash() == rightEquality()->hash()) {
             size_t leftHash = leftEquality()->hash();
-            MyDB_RecordIteratorAltPtr myleftIterTemp = make_shared<MyDB_RecordIteratorAlt>(*myLeftIter);
+            // MyDB_RecordIteratorAltPtr myleftIterTemp = make_shared<MyDB_TableRecIteratorAlt>(*myLeftIter);
+            
             while (leftHash == rightEquality()->hash()) {
                 myRightIter->getCurrent(rightInputRec);
-                myLeftIter = make_shared<MyDB_RecordIteratorAlt>(*myLeftIter);
+                // myLeftIter = make_shared<MyDB_TableRecIteratorAlt>(*myleftIterTemp);
+
                 while (leftEquality()->hash() == rightEquality()->hash()) {
                     myLeftIter->getCurrent(leftInputRec);
                     if (finalPredicate()->toBool()) {

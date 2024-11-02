@@ -47,13 +47,20 @@ public:
 	// Finally, input records are excluded from the computation if they are not 
 	// accepted by selectionPredicate.  This effectively acts like a WHERE clause.
 	//
-	Aggregate (MyDB_TableReaderWriterPtr input, MyDB_TableReaderWriterPtr output,
-		vector <pair <MyDB_AggType, string>> aggsToCompute,
-		vector <string> groupings, string selectionPredicate);
+	Aggregate (MyDB_TableReaderWriterPtr inputIn, MyDB_TableReaderWriterPtr outputIn,
+		vector <pair <MyDB_AggType, string>> aggsToComputeIn,
+		vector <string> groupingsIn, string selectionPredicateIn);
 	
 	// execute the aggregation
 	void run ();
 
+private:
+	MyDB_TableReaderWriterPtr input;
+	MyDB_TableReaderWriterPtr output;
+	vector<pair <MyDB_AggType, string>> aggsToCompute;
+	vector <string> groupings;
+	string selectionPredicate;
+	MyDB_SchemaPtr mySchemaOut;
 };
 
 #endif

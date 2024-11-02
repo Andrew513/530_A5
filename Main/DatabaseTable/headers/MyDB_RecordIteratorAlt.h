@@ -4,6 +4,7 @@
 
 #include <memory>
 #include "MyDB_Record.h"
+#include "MyDB_PageHandle.h"
 using namespace std;
 
 // This pure virtual class is used to iterate through the records in a page or file
@@ -20,11 +21,11 @@ public:
 	// load the current record into the parameter
 	virtual void getCurrent (MyDB_RecordPtr intoMe) = 0;
 
-        // after a call to advance (), a call to getCurrentPointer () will get the address
-        // of the record.  At a later time, it is then possible to reconstitute the record
-        // by calling MyDB_Record.fromBinary (obtainedPointer)... ASSUMING that the page that
+	// after a call to advance (), a call to getCurrentPointer () will get the address
+	// of the record.  At a later time, it is then possible to reconstitute the record
+	// by calling MyDB_Record.fromBinary (obtainedPointer)... ASSUMING that the page that
 	// the record is located on has not been swapped out
-        virtual void *getCurrentPointer () = 0;
+	virtual void *getCurrentPointer () = 0;
 	
 	// advance to the next record... returns true if there is a next record, and 
 	// false if there are no more records to iterate over.  Not that this cannot
@@ -35,6 +36,10 @@ public:
 	MyDB_RecordIteratorAlt () {};
 	virtual ~MyDB_RecordIteratorAlt () {};
 
+	virtual void memorizeState() {};
+	virtual void memorizePageState(int &bc, int &nrs, MyDB_PageHandle &mph) {};
+	virtual void setState() {};
+	virtual void setPageState(int bc, int nrs, MyDB_PageHandle ph) {};
 };
 
 #endif

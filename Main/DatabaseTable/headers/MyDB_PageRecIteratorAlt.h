@@ -16,6 +16,7 @@
 #include "MyDB_PageHandle.h"
 #include "MyDB_Record.h"
 #include "MyDB_RecordIteratorAlt.h"
+#include "MyDB_PageHandle.h"
 
 class MyDB_PageRecIteratorAlt : public MyDB_RecordIteratorAlt {
 
@@ -38,6 +39,18 @@ public:
 	// destructor and contructor
 	MyDB_PageRecIteratorAlt (MyDB_PageHandle myPageIn); 
 	~MyDB_PageRecIteratorAlt ();
+
+        void memorizePageState(int &bc, int &nrs, MyDB_PageHandle &mph) {
+                bc = bytesConsumed;
+                nrs = nextRecSize;
+                mph = myPage;
+        }
+
+        void setPageState(int bc, int nrs, MyDB_PageHandle ph) {
+                bytesConsumed = bc;
+                nextRecSize = nrs;
+                myPage = ph;
+        }
 
 private:
 

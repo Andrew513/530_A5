@@ -10,11 +10,21 @@
 
 using namespace std;
 
-Aggregate :: Aggregate (MyDB_TableReaderWriterPtr, MyDB_TableReaderWriterPtr,
-                vector <pair <MyDB_AggType, string>>,
-                vector <string>, string) {}
+Aggregate :: Aggregate (MyDB_TableReaderWriterPtr inputIn, MyDB_TableReaderWriterPtr outputIn,
+		vector <pair <MyDB_AggType, string>> aggsToComputeIn,
+		vector <string> groupingsIn, string selectionPredicateIn) {
+            input = inputIn;
+            output = outputIn;
+            aggsToCompute = aggsToComputeIn;
+            groupings = groupingsIn;
+            selectionPredicate = selectionPredicateIn;
 
-void Aggregate :: run () {}
+            mySchemaOut = output->getTable()->getSchema();
+        }
+
+void Aggregate :: run () {
+    
+}
 
 #endif
 

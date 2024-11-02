@@ -17,6 +17,8 @@
 #include "MyDB_Record.h"
 #include "MyDB_TableReaderWriter.h"
 #include "MyDB_Table.h"
+#include "MyDB_PageRecIteratorAlt.h"
+#include "MyDB_PageHandle.h"
 
 class MyDB_TableRecIteratorAlt : public MyDB_RecordIteratorAlt {
 
@@ -40,6 +42,18 @@ public:
 	MyDB_TableRecIteratorAlt (MyDB_TableReaderWriter &myParent, MyDB_TablePtr myTableIn);
 	~MyDB_TableRecIteratorAlt ();
 	MyDB_TableRecIteratorAlt (MyDB_TableReaderWriter &myParent, MyDB_TablePtr myTableIn, int lowPage, int highPage);
+        
+        void memorizeState() {
+                curPageMemo = curPage;
+                highPageMemo = highPage;
+                myIter->memorizePageState(bytesConsumedMemo, nextRecSizeMemo, myPageMemo);
+        }
+
+        void setState() {
+                curPage = curPageMemo;
+                highPage = highPageMemo;
+                myIter->setPageState(bytesConsumedMemo, nextRecSizeMemo, myPageMemo);
+        }
 
 private:
 
@@ -48,6 +62,12 @@ private:
 	int highPage;	
 	MyDB_TableReaderWriter &myParent;
 	MyDB_TablePtr myTable;
+
+        int curPageMemo;
+        int highPageMemo;
+        int bytesConsumedMemo;
+        int nextRecSizeMemo;
+        MyDB_PageHandle myPageMemo;
 };
 
 #endif

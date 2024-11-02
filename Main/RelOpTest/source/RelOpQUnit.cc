@@ -88,11 +88,11 @@ int main () {
 		cout << "\nRunning selection.";
 		cout << "\nFirst result should be:\n";
 		cout << "Supplier#000000003|1|11-383-516-1199 4192.400000 furiously regular instructions impress slyly! carefu|\n\n";
-                MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
+		MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
+		MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
 
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
 		}
 
@@ -110,13 +110,13 @@ int main () {
 		cout << "running aggregate\n";
 		myOpAgain.run ();
 		
-                temp = aggTableOut->getEmptyRecord ();
-                myIter = aggTableOut->getIteratorAlt ();
+		temp = aggTableOut->getEmptyRecord ();
+		myIter = aggTableOut->getIteratorAlt ();
 
 		cout << "Now we count the records.";
 		cout << "\nThe output should be 413:\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
 		}
 	}
@@ -140,11 +140,11 @@ int main () {
 
 		cout << "\nFirst result should be:\n";
 		cout << "Supplier#000009428|1|11-896-966-5146 5429.370000 furiously regular pinto beans caj|\n\n";
-                MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
+		MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
+		MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
 
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
 		}
 
@@ -162,13 +162,13 @@ int main () {
 		cout << "running aggregate\n";
 		myOpAgain.run ();
 		
-                temp = aggTableOut->getEmptyRecord ();
-                myIter = aggTableOut->getIteratorAlt ();
+		temp = aggTableOut->getEmptyRecord ();
+		myIter = aggTableOut->getIteratorAlt ();
 
 		cout << "Now we count the records.";
 		cout << "\nThe output should be 29:\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
 		}
 	}
@@ -249,8 +249,8 @@ int main () {
 		cout << "running aggregate\n";
 		myOpAgain.run ();
 		
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+		MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+		MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
 		cout << "\nThe output should be, in some order:\n";
 		cout << "Supplier#000002245|32|\n";
@@ -259,10 +259,10 @@ int main () {
 		cout << "Supplier#000002272|32|\n";
 		cout << "Supplier#000002282|32|\n";
 		cout << "\nHere goes:\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
-                }
+		}
 	}
 
 	MyDB_BPlusTreeReaderWriterPtr supplierTableR = make_shared <MyDB_BPlusTreeReaderWriter> ("r_address", myTableRight, myMgr);
@@ -303,12 +303,12 @@ int main () {
 		cout << "running selection\n";
 		myOp.run ();
 
-                MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
+		MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
+		MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
 
 		cout << "This should return 32 copies of 'Supplier#000009436|aaY,0sdTlrtKjse|I love comments! unusual, regular...'" << "\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
 		}	
 
@@ -345,13 +345,13 @@ int main () {
 		cout << "running agg\n";
 		myOpAgain.run ();
 
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+		MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+		MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
 		cout << "\nThere should be nine groups, each with 32 records.\n";
 		cout << "One of them should be '5|Supplier#000000005|5.000000|-283.840000|32|'.\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
 		}
 	}
@@ -383,14 +383,14 @@ int main () {
 		//
 		cout << "running agg\n";
 		myOpAgain.run ();
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+		MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+		MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
 		cout << "\nThere should be 101 groups, each with 3200 records, except for the first and last,\n";
 		cout << "These should be '0|50.000000|4017.558586|3168|' and\n";
 		cout << "'100|10000.000000|8968.420000|32|' respectively.\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
 		}
 
@@ -416,11 +416,11 @@ int main () {
 		myOpOnceAgain.run ();
 
 		cout << "\nThere should be one result: 320000.\n";
-                temp = aggTableOutFinal->getEmptyRecord ();
-                myIter = aggTableOutFinal->getIteratorAlt ();
+		temp = aggTableOutFinal->getEmptyRecord ();
+		myIter = aggTableOutFinal->getIteratorAlt ();
 
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
 		}
 	}
@@ -498,14 +498,14 @@ int main () {
 		cout << "running aggregate\n";
 		myOpAgain.run ();
 		
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+		MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+		MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
 		cout << "\nThe output should be\n\t0|64|\n\t1|96|\n\t2|64|\n\t3|96|\n\t4|192|\n\t5|256|\n\t6|192|\n\t7|96|\n\t8|64|\n\t9|128|\n\t11|288|\n\t14|96|\n\t15|128|\n\t16|128|\n\t17|32|\n\t19|64|\n\t20|384|\n\t24|64|\n\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
-                }
+		}
 	}
 
 	{
@@ -577,14 +577,14 @@ int main () {
 		cout << "running aggregate (may take some time)\n";
 		myOpAgain.run ();
 		
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+		MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+		MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
 		cout << "\nThe output should be 11103008:\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
+		while (myIter->advance ()) {
+			myIter->getCurrent (temp);
 			cout << temp << "\n";
-                }
+		}
 	}
 
 }
