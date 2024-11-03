@@ -46,9 +46,9 @@ public:
 	// by iterateIntoMe
 	MyDB_RecordIteratorPtr getIterator (MyDB_RecordPtr iterateIntoMe);
 
-        // gets an instance of an alternate iterator over the table... this is an
-        // iterator that has the alternate getCurrent ()/advance () interface
-        MyDB_RecordIteratorAltPtr getIteratorAlt ();
+	// gets an instance of an alternate iterator over the table... this is an
+	// iterator that has the alternate getCurrent ()/advance () interface
+	MyDB_RecordIteratorAltPtr getIteratorAlt ();
 
 	// gets an instance of an alternate iterator over the page; this iterator
 	// works on a range of pages in the file, and iterates from lowPage through

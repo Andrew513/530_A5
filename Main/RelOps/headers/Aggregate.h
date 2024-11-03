@@ -60,7 +60,7 @@ private:
 	vector<pair <MyDB_AggType, string>> aggsToCompute;
 	vector <string> groupings;
 	string selectionPredicate;
-	MyDB_SchemaPtr mySchemaOut;
+	size_t numGroups;
 };
 
 #endif

@@ -93,7 +93,7 @@ int main () {
 
 		while (myIter->advance ()) {
 			myIter->getCurrent (temp);
-			cout << temp << "\n";
+			// cout << temp << "\n";
 		}
 
 		// now, we count the total number of records 
@@ -145,7 +145,7 @@ int main () {
 
 		while (myIter->advance ()) {
 			myIter->getCurrent (temp);
-			cout << temp << "\n";
+			// cout << temp << "\n";
 		}
 
 		// now, we count the total number of records 

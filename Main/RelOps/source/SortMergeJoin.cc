@@ -59,11 +59,9 @@ void SortMergeJoin :: run () {
             continue;
         } else if (leftEquality()->hash() == rightEquality()->hash()) {
             size_t leftHash = leftEquality()->hash();
-            // MyDB_RecordIteratorAltPtr myleftIterTemp = make_shared<MyDB_TableRecIteratorAlt>(*myLeftIter);
             myLeftIter->memorizeState();
             while (leftHash == rightEquality()->hash()) {
                 myRightIter->getCurrent(rightInputRec);
-                // myLeftIter = make_shared<MyDB_TableRecIteratorAlt>(*myleftIterTemp);
                 myLeftIter->setState();
                 while (leftEquality()->hash() == rightEquality()->hash()) {
                     myLeftIter->getCurrent(leftInputRec);
