@@ -8,6 +8,7 @@
 #include "MyDB_TableReaderWriter.h"
 #include "SortMergeJoin.h"
 #include "Sorting.h"
+#include <vector>
 
 SortMergeJoin :: SortMergeJoin (MyDB_TableReaderWriterPtr leftInput, MyDB_TableReaderWriterPtr rightInput,
 		MyDB_TableReaderWriterPtr outputIn, string finalSelectionPredicateIn, 
@@ -41,9 +42,12 @@ void SortMergeJoin :: run () {
     MyDB_RecordPtr combinedRec = make_shared<MyDB_Record>(mySchemaOut);
     combinedRec->buildFrom(leftInputRec, rightInputRec);
 
-    func leftEquality = leftInputRec->compileComputation(equalityCheck.first), rightEquality = rightInputRec->compileComputation(equalityCheck.second);
+    // func leftEquality = leftInputRec->compileComputation(equalityCheck.first), rightEquality = rightInputRec->compileComputation(equalityCheck.second);
+    func larger = combinedRec->compileComputation("> (" + equalityCheck.first + ", " + equalityCheck.second + ")");
+    func smaller = combinedRec->compileComputation("< (" + equalityCheck.first + ", " + equalityCheck.second + ")");
+    func equal = combinedRec->compileComputation("== (" + equalityCheck.first + ", " + equalityCheck.second + ")");
     func finalPredicate = combinedRec->compileComputation(finalSelectionPredicate);
-    
+
     vector<func> finalComputations;
     for (string s : projections)
         finalComputations.push_back(combinedRec->compileComputation(s));
@@ -52,19 +56,29 @@ void SortMergeJoin :: run () {
     while (true) {
         myLeftIter->getCurrent(leftInputRec);
         myRightIter->getCurrent(rightInputRec);
+        if (smaller()->toBool() && myLeftIter->advance()) {
+            continue;
+        } else if (larger()->toBool() && myRightIter->advance()) {
+            continue;
+        } else if (equal()->toBool()) {
+            vector<void *> records;
+            bool leftEnd = false, rightEnd = false;
+            myLeftIter->getCurrent(leftInputRec);
+            while (equal()->toBool()) {
+                records.push_back(myLeftIter->getCurrentPointer());
+                
+                if (!(myLeftIter->advance())) {
+                    leftEnd = true;
+                    break;
+                }
+                myLeftIter->getCurrent(leftInputRec);
+            }
 
-        if (leftEquality()->hash() < rightEquality()->hash() && myLeftIter->advance()) {
-            continue;
-        } else if (leftEquality()->hash() > rightEquality()->hash() && myRightIter->advance()) {
-            continue;
-        } else if (leftEquality()->hash() == rightEquality()->hash()) {
-            size_t leftHash = leftEquality()->hash();
-            myLeftIter->memorizeState();
-            while (leftHash == rightEquality()->hash()) {
-                myRightIter->getCurrent(rightInputRec);
-                myLeftIter->setState();
-                while (leftEquality()->hash() == rightEquality()->hash()) {
-                    myLeftIter->getCurrent(leftInputRec);
+            leftInputRec->fromBinary(records[0]);
+            myRightIter->getCurrent(rightInputRec);
+            while (equal()->toBool()) {
+                for (void* r : records) {
+                    leftInputRec->fromBinary(r);
                     if (finalPredicate()->toBool()) {
                         int i = 0;
                         for (auto &f : finalComputations)
@@ -72,19 +86,21 @@ void SortMergeJoin :: run () {
                         outputRec->recordContentHasChanged();
                         output->append(outputRec);
                     }
-
-                    if (!(myLeftIter->advance()))
-                        break;
                 }
 
-                if (!(myRightIter->advance()))
+                if (!(myRightIter->advance())) {
+                    rightEnd = true;
                     break;
+                }
+                myRightIter->getCurrent(rightInputRec);
             }
+
+            if (leftEnd || rightEnd) 
+                break;
         } else {
             break;
         }
     }
-
     // unordered_map <size_t, vector<void *>> myHash;
     // while (myLeftIter->advance()) {
     //     myLeftIter->getCurrent(leftInputRec);
