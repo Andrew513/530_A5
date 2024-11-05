@@ -270,7 +270,7 @@ int main () {
 
 	cout << "loading right into B+-Tree indexed on r_address.\n";
 	supplierTableR->loadFromTextFile ("supplierBig.tbl");
-
+	cout << "finish loading\n";
 	{
 
 		// get the output schema and table

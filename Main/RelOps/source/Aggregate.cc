@@ -47,14 +47,13 @@ void Aggregate :: run () {
     vector<func> aggComps;
     for (auto &p : aggsToCompute) {
         if (p.first == MyDB_AggType :: sum || p.first == MyDB_AggType :: avg)
-            aggComps.push_back(combinedRec->compileComputation("+ (" + p.second + ", [" + output->getTable()->getSchema()->getAtts()[i].first + "])"));
+            aggComps.push_back(combinedRec->compileComputation("+ (" + p.second + ", [" + output->getTable()->getSchema()->getAtts()[numGroups + i++].first + "])"));
         else
-            aggComps.push_back(combinedRec->compileComputation("+ (int[1], [" + output->getTable()->getSchema()->getAtts()[i].first + "])"));
-        i++;
+            aggComps.push_back(combinedRec->compileComputation("+ (int[1], [" + output->getTable()->getSchema()->getAtts()[numGroups + i++].first + "])"));
     }
     aggComps.push_back(combinedRec->compileComputation("+ (int[1], [MyDB_cnt])"));
     
-    unordered_map<size_t, void*> myHash; // assume each hashVal only match one group
+    unordered_map<size_t, void*> myHash; // assume each hashVal only matches one group
     func selectPred = inputRec->compileComputation(selectionPredicate);
     MyDB_RecordIteratorAltPtr myIter = input->getIteratorAlt();
     MyDB_PageReaderWriterPtr myAnymPage = make_shared<MyDB_PageReaderWriter>(*(output->getBufferMgr()));
@@ -73,6 +72,10 @@ void Aggregate :: run () {
 
         if (myHash.count(hashVal) == 0) {
             MyDB_RecordPtr tempRec = make_shared<MyDB_Record>(mySchemaAgg);
+            for (int i = 0; i < numGroups; i++) {
+                tempRec->getAtt(i)->set(groupingEqualities[i]());
+            }
+
             void *tempPointer = myAnymPage->appendAndReturnLocation(tempRec);
             if (tempPointer == nullptr) {
                 myAnymPage = make_shared<MyDB_PageReaderWriter>(*(output->getBufferMgr()));
@@ -82,11 +85,12 @@ void Aggregate :: run () {
         }
 
         aggRec->fromBinary(myHash[hashVal]);
-
+        
         i = 0;
         for (auto &f : aggComps) {
             aggRec->getAtt(numGroups + i++)->set(f());
         }
+        
         aggRec->recordContentHasChanged();
         aggRec->toBinary(myHash[hashVal]);
     }
@@ -94,11 +98,12 @@ void Aggregate :: run () {
     MyDB_RecordPtr outputRec = output->getEmptyRecord();
     vector<func> finalAggComps;
     i = 0;
+
     for (auto &p : aggsToCompute) {
         if (p.first == MyDB_AggType :: avg) {
             finalAggComps.push_back(aggRec->compileComputation("/ (" + p.second + ", [MyDB_cnt]"));
         } else {
-            finalAggComps.push_back(aggRec->compileComputation("+ (int[0], [" + output->getTable()->getSchema()->getAtts()[i].first + "])"));
+            finalAggComps.push_back(aggRec->compileComputation("+ (int[0], [" + output->getTable()->getSchema()->getAtts()[numGroups + i].first + "])"));
         }
     }
     
