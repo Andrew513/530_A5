@@ -21,10 +21,6 @@ void BPlusSelection :: run() {
     MyDB_RecordIteratorAltPtr it = input->getRangeIteratorAlt(low, high);
     while(it->advance()) {
         it->getCurrent(inputRec);
-<<<<<<< HEAD
-
-=======
->>>>>>> a26918b (update aggregate)
         if(pred()->toBool()) {
             for(int i = 0; i < computations.size(); i++) {
                 MyDB_AttValPtr thisAtt=outputRec->getAtt(i);

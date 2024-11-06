@@ -30,10 +30,7 @@ public:
 	
 	// execute the selection operation
 	void run ();
-<<<<<<< HEAD
-=======
 
->>>>>>> a26918b (update aggregate)
 	MyDB_BPlusTreeReaderWriterPtr input;
 	MyDB_TableReaderWriterPtr output;
 	MyDB_AttValPtr low;

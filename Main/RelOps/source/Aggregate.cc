@@ -43,7 +43,6 @@ void Aggregate :: run () {
     MyDB_RecordPtr combinedRec = make_shared<MyDB_Record>(mySchemaComb);
     combinedRec->buildFrom(inputRec, aggRec);
 
-    cout << "Flag 1" << endl;
     int i = 0;
     vector<func> aggComps;
     for (auto &p : aggsToCompute) {
@@ -53,8 +52,6 @@ void Aggregate :: run () {
             aggComps.push_back(combinedRec->compileComputation("+ (int[1], [" + output->getTable()->getSchema()->getAtts()[numGroups + i++].first + "])"));
     }
     aggComps.push_back(combinedRec->compileComputation("+ (int[1], [MyDB_cnt])"));
-
-    cout << "Flag 2" << endl;
     
     unordered_map<size_t, void*> myHash; // assume each hashVal only matches one group
     func selectPred = inputRec->compileComputation(selectionPredicate);
@@ -72,8 +69,6 @@ void Aggregate :: run () {
         for (auto &f : groupingEqualities) {
             hashVal ^= f()->hash();
         }
-
-        cout << "Flag 4" << endl;
 
         if (myHash.count(hashVal) == 0) {
             MyDB_RecordPtr tempRec = make_shared<MyDB_Record>(mySchemaAgg);
@@ -119,7 +114,6 @@ void Aggregate :: run () {
             outputRec->getAtt(i)->set(aggRec->getAtt(i));
         }
 
-        i = 0;
         for (auto a : finalAggComps) {
             outputRec->getAtt(i++)->set(a());
         }
