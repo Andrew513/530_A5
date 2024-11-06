@@ -43,6 +43,7 @@ void Aggregate :: run () {
     MyDB_RecordPtr combinedRec = make_shared<MyDB_Record>(mySchemaComb);
     combinedRec->buildFrom(inputRec, aggRec);
 
+    cout << "Flag 1" << endl;
     int i = 0;
     vector<func> aggComps;
     for (auto &p : aggsToCompute) {
@@ -52,11 +53,15 @@ void Aggregate :: run () {
             aggComps.push_back(combinedRec->compileComputation("+ (int[1], [" + output->getTable()->getSchema()->getAtts()[numGroups + i++].first + "])"));
     }
     aggComps.push_back(combinedRec->compileComputation("+ (int[1], [MyDB_cnt])"));
+
+    cout << "Flag 2" << endl;
     
     unordered_map<size_t, void*> myHash; // assume each hashVal only matches one group
     func selectPred = inputRec->compileComputation(selectionPredicate);
     MyDB_RecordIteratorAltPtr myIter = input->getIteratorAlt();
     MyDB_PageReaderWriterPtr myAnymPage = make_shared<MyDB_PageReaderWriter>(*(output->getBufferMgr()));
+
+    cout << "Flag 3" << endl;
 
     while (myIter->advance()) {
         myIter->getCurrent(inputRec);
@@ -69,6 +74,8 @@ void Aggregate :: run () {
         for (auto &f : groupingEqualities) {
             hashVal ^= f()->hash();
         }
+
+        cout << "Flag 4" << endl;
 
         if (myHash.count(hashVal) == 0) {
             MyDB_RecordPtr tempRec = make_shared<MyDB_Record>(mySchemaAgg);
@@ -83,6 +90,8 @@ void Aggregate :: run () {
             }
             myHash[hashVal] = tempPointer;
         }
+
+        cout << "Flag 5" << endl;
 
         aggRec->fromBinary(myHash[hashVal]);
         
@@ -99,13 +108,17 @@ void Aggregate :: run () {
     vector<func> finalAggComps;
     i = 0;
 
+    cout << "Flag 6" << endl;
+
     for (auto &p : aggsToCompute) {
         if (p.first == MyDB_AggType :: avg) {
-            finalAggComps.push_back(aggRec->compileComputation("/ (" + p.second + ", [MyDB_cnt]"));
+            finalAggComps.push_back(aggRec->compileComputation("/ (" + p.second + ", [MyDB_cnt])"));
         } else {
             finalAggComps.push_back(aggRec->compileComputation("+ (int[0], [" + output->getTable()->getSchema()->getAtts()[numGroups + i].first + "])"));
         }
     }
+
+    cout << "Flag 7" << endl;
     
     for (const auto &[v, p] : myHash) {
         aggRec->fromBinary(p);
@@ -113,6 +126,7 @@ void Aggregate :: run () {
             outputRec->getAtt(i)->set(aggRec->getAtt(i));
         }
 
+        i = 0;
         for (auto a : finalAggComps) {
             outputRec->getAtt(i++)->set(a());
         }
