@@ -26,6 +26,7 @@ SortMergeJoin :: SortMergeJoin (MyDB_TableReaderWriterPtr leftInput, MyDB_TableR
         }
 
 void SortMergeJoin :: run () {
+    // sort left table on equalityCheck.first and sort right table on equalityCheck.second
     MyDB_RecordPtr llhs = leftTable->getEmptyRecord(), lrhs = leftTable->getEmptyRecord();
     MyDB_RecordPtr rlhs = rightTable->getEmptyRecord(), rrhs = rightTable->getEmptyRecord();
     function<bool ()> leftComparator = buildRecordComparator(llhs, lrhs, equalityCheck.first), rightComparator = buildRecordComparator(rlhs, rrhs, equalityCheck.second);
@@ -42,7 +43,7 @@ void SortMergeJoin :: run () {
     MyDB_RecordPtr combinedRec = make_shared<MyDB_Record>(mySchemaOut);
     combinedRec->buildFrom(leftInputRec, rightInputRec);
 
-    // func leftEquality = leftInputRec->compileComputation(equalityCheck.first), rightEquality = rightInputRec->compileComputation(equalityCheck.second);
+    // build comparator for left record and right record
     func larger = combinedRec->compileComputation("> (" + equalityCheck.first + ", " + equalityCheck.second + ")");
     func smaller = combinedRec->compileComputation("< (" + equalityCheck.first + ", " + equalityCheck.second + ")");
     func equal = combinedRec->compileComputation("== (" + equalityCheck.first + ", " + equalityCheck.second + ")");
@@ -57,23 +58,32 @@ void SortMergeJoin :: run () {
         myLeftIter->getCurrent(leftInputRec);
         myRightIter->getCurrent(rightInputRec);
         if (smaller()->toBool() && myLeftIter->advance()) {
+            // if left record is smaller, left advance
             continue;
         } else if (larger()->toBool() && myRightIter->advance()) {
+            // if right record is smaller, right advance
             continue;
         } else if (equal()->toBool()) {
             vector<void *> records;
-            bool leftEnd = false, rightEnd = false;
+
+            // put all left record havings the same equality check att as the current right record into records
+            // ex: left table [(1, x), (1, y), (1, z), (2, x), (2, y), (3, x), (3, y), (3, z), ...], right record = (2, x)
+            //     records will be [(2, x), (2, y)]
             myLeftIter->getCurrent(leftInputRec);
             while (equal()->toBool()) {
                 records.push_back(myLeftIter->getCurrentPointer());
                 
                 if (!(myLeftIter->advance())) {
-                    leftEnd = true;
-                    break;
+                    return;
                 }
                 myLeftIter->getCurrent(leftInputRec);
             }
 
+            // check if each left record in records match current right record, if true, combine and append
+            // do above step for all right records having the same equalityCheck att as the current right record
+            // ex: right Table = [(1, a), (2, a), (2, b), (2, x), (2, y), (3, x), (3, z), ...], cur right record = (2, x)
+            //     records = [(2, x), (2, y)]
+            //     will check (2, a), (2, b), (2, x), (2, y) on records
             leftInputRec->fromBinary(records[0]);
             myRightIter->getCurrent(rightInputRec);
             while (equal()->toBool()) {
@@ -89,48 +99,14 @@ void SortMergeJoin :: run () {
                 }
 
                 if (!(myRightIter->advance())) {
-                    rightEnd = true;
-                    break;
+                    return;
                 }
                 myRightIter->getCurrent(rightInputRec);
             }
-
-            if (leftEnd || rightEnd) 
-                break;
         } else {
             break;
         }
     }
-    // unordered_map <size_t, vector<void *>> myHash;
-    // while (myLeftIter->advance()) {
-    //     myLeftIter->getCurrent(leftInputRec);
-    //     size_t hashVal = leftEquality()->hash();
-    //     myHash[hashVal].push_back(myLeftIter->getCurrentPointer());
-    // }
-
-    // while (myRightIter->advance()) {
-    //     myRightIter->getCurrent(rightInputRec);
-    //     size_t hashVal = rightEquality()->hash();
-
-    //     if (myHash.count(hashVal) == 0)
-    //         continue;
-    
-    //     vector<void *> &potentialMatches = myHash[hashVal];
-    //     for (auto &v : potentialMatches) {
-    //         leftInputRec->fromBinary(v);
-
-    //         if (finalPredicate()->toBool()) {
-    //             int i = 0;
-    //             for (auto &f : finalComputations) {
-    //                 outputRec->getAtt(i++)->set(f());
-    //             }
-    //             outputRec->recordContentHasChanged();
-    //             output->append(outputRec);
-    //         }
-
-    //        
-    //     }
-    // }
 }
 
 #endif

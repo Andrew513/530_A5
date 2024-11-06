@@ -59,9 +59,7 @@ void Aggregate :: run () {
     unordered_map<size_t, void*> myHash; // assume each hashVal only matches one group
     func selectPred = inputRec->compileComputation(selectionPredicate);
     MyDB_RecordIteratorAltPtr myIter = input->getIteratorAlt();
-    MyDB_PageReaderWriterPtr myAnymPage = make_shared<MyDB_PageReaderWriter>(*(output->getBufferMgr()));
-
-    cout << "Flag 3" << endl;
+    MyDB_PageReaderWriterPtr myAnymPage = make_shared<MyDB_PageReaderWriter>(true, *(output->getBufferMgr()));
 
     while (myIter->advance()) {
         myIter->getCurrent(inputRec);
@@ -83,17 +81,16 @@ void Aggregate :: run () {
                 tempRec->getAtt(i)->set(groupingEqualities[i]());
             }
 
-            void *tempPointer = myAnymPage->appendAndReturnLocation(tempRec);
+            void *tempPointer = myAnymPage->appendAndReturnLocation(tempRec);      
             if (tempPointer == nullptr) {
-                myAnymPage = make_shared<MyDB_PageReaderWriter>(*(output->getBufferMgr()));
+                myAnymPage = make_shared<MyDB_PageReaderWriter>(true, *(output->getBufferMgr()));
                 tempPointer = myAnymPage->appendAndReturnLocation(tempRec);
             }
             myHash[hashVal] = tempPointer;
         }
 
-        cout << "Flag 5" << endl;
-
-        aggRec->fromBinary(myHash[hashVal]);
+        void *locationToStore = myHash[hashVal];
+        aggRec->fromBinary(locationToStore);
         
         i = 0;
         for (auto &f : aggComps) {
@@ -101,25 +98,21 @@ void Aggregate :: run () {
         }
         
         aggRec->recordContentHasChanged();
-        aggRec->toBinary(myHash[hashVal]);
+        aggRec->toBinary(locationToStore);
     }
-    
+
     MyDB_RecordPtr outputRec = output->getEmptyRecord();
     vector<func> finalAggComps;
     i = 0;
-
-    cout << "Flag 6" << endl;
-
     for (auto &p : aggsToCompute) {
         if (p.first == MyDB_AggType :: avg) {
-            finalAggComps.push_back(aggRec->compileComputation("/ (" + p.second + ", [MyDB_cnt])"));
+            finalAggComps.push_back(aggRec->compileComputation("/ ([" + output->getTable()->getSchema()->getAtts()[numGroups + i].first + "], [MyDB_cnt])"));
         } else {
             finalAggComps.push_back(aggRec->compileComputation("+ (int[0], [" + output->getTable()->getSchema()->getAtts()[numGroups + i].first + "])"));
         }
+        i++;
     }
 
-    cout << "Flag 7" << endl;
-    
     for (const auto &[v, p] : myHash) {
         aggRec->fromBinary(p);
         for (i = 0; i < groupings.size(); i++) {
