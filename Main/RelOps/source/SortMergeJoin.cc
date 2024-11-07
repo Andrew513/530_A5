@@ -80,6 +80,9 @@ void SortMergeJoin::run() {
             // cout << "Records are equal, collecting matching left records..." << endl;
             vector<void *> records;
 
+            // put all left record havings the same equality check att as the current right record into records
+            // ex: left table [(1, x), (1, y), (1, z), (2, x), (2, y), (3, x), (3, y), (3, z), ...], right record = (2, x)
+            //     records will be [(2, x), (2, y)]
             myLeftIter->getCurrent(leftInputRec);
             while (equal()->toBool()) {
                 // cout << "Adding left record to vector." << endl;
@@ -94,6 +97,7 @@ void SortMergeJoin::run() {
 
             // cout << "Processing right records for matches." << endl;
             myRightIter->getCurrent(rightInputRec);
+            int cnt = 0;
             while (equal()->toBool()) {
                 for (void *r : records) {
                     leftInputRec->fromBinary(r);
@@ -114,6 +118,9 @@ void SortMergeJoin::run() {
                 }
                 myRightIter->getCurrent(rightInputRec);
             }
+            cout << cnt << ", " << records.size() << endl;
+            if (leftEnd)
+                break;
         } else {
             // cout << "No match found, breaking loop." << endl;
             break;
