@@ -1,4 +1,3 @@
-
 #ifndef SORTMERGE_CC
 #define SORTMERGE_CC
 
@@ -9,41 +8,43 @@
 #include "SortMergeJoin.h"
 #include "Sorting.h"
 #include <vector>
+#include <iostream>
 
-SortMergeJoin :: SortMergeJoin (MyDB_TableReaderWriterPtr leftInput, MyDB_TableReaderWriterPtr rightInput,
-		MyDB_TableReaderWriterPtr outputIn, string finalSelectionPredicateIn, 
-		vector <string> projectionsIn,
-		pair <string, string> equalityCheckIn, string leftSelectionPredicateIn,
-		string rightSelectionPredicateIn) {
-            leftTable = leftInput;
-            rightTable = rightInput;
-            output = outputIn;
-            finalSelectionPredicate = finalSelectionPredicateIn;
-            projections = projectionsIn;
-            equalityCheck = equalityCheckIn;
-            leftSelectionPredicate = leftSelectionPredicateIn;
-            rightSelectionPredicate = rightSelectionPredicateIn;
-        }
+SortMergeJoin::SortMergeJoin(MyDB_TableReaderWriterPtr leftInput, MyDB_TableReaderWriterPtr rightInput,
+                             MyDB_TableReaderWriterPtr outputIn, string finalSelectionPredicateIn,
+                             vector<string> projectionsIn,
+                             pair<string, string> equalityCheckIn, string leftSelectionPredicateIn,
+                             string rightSelectionPredicateIn) {
+    leftTable = leftInput;
+    rightTable = rightInput;
+    output = outputIn;
+    finalSelectionPredicate = finalSelectionPredicateIn;
+    projections = projectionsIn;
+    equalityCheck = equalityCheckIn;
+    leftSelectionPredicate = leftSelectionPredicateIn;
+    rightSelectionPredicate = rightSelectionPredicateIn;
+}
 
-void SortMergeJoin :: run () {
-    // sort left table on equalityCheck.first and sort right table on equalityCheck.second
+void SortMergeJoin::run() {
+    // Sort left table on equalityCheck.first and sort right table on equalityCheck.second
     MyDB_RecordPtr llhs = leftTable->getEmptyRecord(), lrhs = leftTable->getEmptyRecord();
     MyDB_RecordPtr rlhs = rightTable->getEmptyRecord(), rrhs = rightTable->getEmptyRecord();
-    function<bool ()> leftComparator = buildRecordComparator(llhs, lrhs, equalityCheck.first), rightComparator = buildRecordComparator(rlhs, rrhs, equalityCheck.second);
+    function<bool()> leftComparator = buildRecordComparator(llhs, lrhs, equalityCheck.first);
+    function<bool()> rightComparator = buildRecordComparator(rlhs, rrhs, equalityCheck.second);
     MyDB_RecordIteratorAltPtr myLeftIter = buildItertorOverSortedRuns(64, *leftTable, leftComparator, llhs, lrhs, leftSelectionPredicate);
     MyDB_RecordIteratorAltPtr myRightIter = buildItertorOverSortedRuns(64, *rightTable, rightComparator, rlhs, rrhs, rightSelectionPredicate);
 
     MyDB_RecordPtr leftInputRec = leftTable->getEmptyRecord(), rightInputRec = rightTable->getEmptyRecord();
-    MyDB_SchemaPtr mySchemaOut = make_shared<MyDB_Schema> ();
+    MyDB_SchemaPtr mySchemaOut = make_shared<MyDB_Schema>();
     for (auto &p : leftTable->getTable()->getSchema()->getAtts())
         mySchemaOut->appendAtt(p);
-    for(auto &p : rightTable->getTable()->getSchema()->getAtts())
+    for (auto &p : rightTable->getTable()->getSchema()->getAtts())
         mySchemaOut->appendAtt(p);
 
     MyDB_RecordPtr combinedRec = make_shared<MyDB_Record>(mySchemaOut);
     combinedRec->buildFrom(leftInputRec, rightInputRec);
 
-    // build comparator for left record and right record
+    // Build comparator for left record and right record
     func larger = combinedRec->compileComputation("> (" + equalityCheck.first + ", " + equalityCheck.second + ")");
     func smaller = combinedRec->compileComputation("< (" + equalityCheck.first + ", " + equalityCheck.second + ")");
     func equal = combinedRec->compileComputation("== (" + equalityCheck.first + ", " + equalityCheck.second + ")");
@@ -54,56 +55,67 @@ void SortMergeJoin :: run () {
         finalComputations.push_back(combinedRec->compileComputation(s));
 
     MyDB_RecordPtr outputRec = output->getEmptyRecord();
+
     while (true) {
+        // cout << "Fetching current left and right records..." << endl;
         myLeftIter->getCurrent(leftInputRec);
         myRightIter->getCurrent(rightInputRec);
-        if (smaller()->toBool() && myLeftIter->advance()) {
-            // if left record is smaller, left advance
+
+        // cout << "Comparing left and right records." << endl;
+        if (smaller()->toBool()) {
+            // cout << "Left record is smaller, advancing left iterator." << endl;
+            if (!myLeftIter->advance()) {
+                // cout << "Left iterator reached the end." << endl;
+                break;
+            }
             continue;
-        } else if (larger()->toBool() && myRightIter->advance()) {
-            // if right record is smaller, right advance
+        } else if (larger()->toBool()) {
+            // cout << "Right record is smaller, advancing right iterator." << endl;
+            if (!myRightIter->advance()) {
+                // cout << "Right iterator reached the end." << endl;
+                break;
+            }
             continue;
         } else if (equal()->toBool()) {
+            // cout << "Records are equal, collecting matching left records..." << endl;
             vector<void *> records;
 
-            // put all left record havings the same equality check att as the current right record into records
-            // ex: left table [(1, x), (1, y), (1, z), (2, x), (2, y), (3, x), (3, y), (3, z), ...], right record = (2, x)
-            //     records will be [(2, x), (2, y)]
             myLeftIter->getCurrent(leftInputRec);
             while (equal()->toBool()) {
+                // cout << "Adding left record to vector." << endl;
                 records.push_back(myLeftIter->getCurrentPointer());
-                
-                if (!(myLeftIter->advance())) {
+
+                if (!myLeftIter->advance()) {
+                    // cout << "Left iterator exhausted while collecting matches." << endl;
                     return;
                 }
                 myLeftIter->getCurrent(leftInputRec);
             }
 
-            // check if each left record in records match current right record, if true, combine and append
-            // do above step for all right records having the same equalityCheck att as the current right record
-            // ex: right Table = [(1, a), (2, a), (2, b), (2, x), (2, y), (3, x), (3, z), ...], cur right record = (2, x)
-            //     records = [(2, x), (2, y)]
-            //     will check (2, a), (2, b), (2, x), (2, y) on records
-            leftInputRec->fromBinary(records[0]);
+            // cout << "Processing right records for matches." << endl;
             myRightIter->getCurrent(rightInputRec);
             while (equal()->toBool()) {
-                for (void* r : records) {
+                for (void *r : records) {
                     leftInputRec->fromBinary(r);
                     if (finalPredicate()->toBool()) {
+                        // cout << "Final predicate matched, appending output record." << endl;
                         int i = 0;
-                        for (auto &f : finalComputations)
+                        for (auto &f : finalComputations) {
                             outputRec->getAtt(i++)->set(f());
+                        }
                         outputRec->recordContentHasChanged();
                         output->append(outputRec);
                     }
                 }
 
-                if (!(myRightIter->advance())) {
+                if (!myRightIter->advance()) {
+                    // cout << "Right iterator exhausted while processing matches." << endl;
                     return;
                 }
                 myRightIter->getCurrent(rightInputRec);
             }
         } else {
+            // cout << "No match found, breaking loop." << endl;
             break;
         }
     }
