@@ -54,6 +54,9 @@ void SortMergeJoin :: run () {
         finalComputations.push_back(combinedRec->compileComputation(s));
 
     MyDB_RecordPtr outputRec = output->getEmptyRecord();
+
+    myLeftIter->advance();
+    myRightIter->advance();
     while (true) {
         myLeftIter->getCurrent(leftInputRec);
         myRightIter->getCurrent(rightInputRec);
@@ -64,29 +67,35 @@ void SortMergeJoin :: run () {
             // if right record is smaller, right advance
             continue;
         } else if (equal()->toBool()) {
-            vector<void *> records;
-
             // put all left record havings the same equality check att as the current right record into records
             // ex: left table [(1, x), (1, y), (1, z), (2, x), (2, y), (3, x), (3, y), (3, z), ...], right record = (2, x)
             //     records will be [(2, x), (2, y)]
+            vector<void *> records;
+            bool leftEnd = false;
             myLeftIter->getCurrent(leftInputRec);
             while (equal()->toBool()) {
                 records.push_back(myLeftIter->getCurrentPointer());
                 
                 if (!(myLeftIter->advance())) {
-                    return;
+                    leftEnd = true;
+                    break;
                 }
                 myLeftIter->getCurrent(leftInputRec);
             }
 
+            if (records.empty()) 
+                continue;
             // check if each left record in records match current right record, if true, combine and append
             // do above step for all right records having the same equalityCheck att as the current right record
             // ex: right Table = [(1, a), (2, a), (2, b), (2, x), (2, y), (3, x), (3, z), ...], cur right record = (2, x)
             //     records = [(2, x), (2, y)]
             //     will check (2, a), (2, b), (2, x), (2, y) on records
+            cout << "record size: " << records.size() << " ";
             leftInputRec->fromBinary(records[0]);
             myRightIter->getCurrent(rightInputRec);
+            int cnt = 0;
             while (equal()->toBool()) {
+                cnt += 1;
                 for (void* r : records) {
                     leftInputRec->fromBinary(r);
                     if (finalPredicate()->toBool()) {
@@ -99,10 +108,13 @@ void SortMergeJoin :: run () {
                 }
 
                 if (!(myRightIter->advance())) {
-                    return;
+                    break;
                 }
                 myRightIter->getCurrent(rightInputRec);
             }
+            cout << cnt << ", " << records.size() << endl;
+            if (leftEnd)
+                break;
         } else {
             break;
         }
